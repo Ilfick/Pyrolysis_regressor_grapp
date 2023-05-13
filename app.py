@@ -2,7 +2,6 @@ import gradio as gr
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 from keras.models import load_model
-from sklearn.model_selection import train_test_split
 import matplotlib
 import os
 
@@ -13,10 +12,8 @@ import matplotlib.pyplot as plt
 def train_data():
     path = 'data.csv'
     data = pd.read_csv(path, sep=',')
-    X = data[['Working_time', 'Ethane', 'Prop', 'Temp', 'Vap_fr']].values
-    y = data[['C2H4', 'C3H6']].values
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True)
-    return X
+    x = data[['Working_time', 'Ethane', 'Prop', 'Temp', 'Vap_fr']].values
+    return x
 
 
 class PyrolysisPredictor():
@@ -44,13 +41,19 @@ def form_df(min_working_time, max_working_time, ethane, propane, temperature, va
     return df
 
 
-def res_df(min_working_time, max_working_time, ethane, propane, temperature, vapor):
+def res_df(min_working_time, max_working_time, ethane, propane, temperature, vapor, file_name, format_file):
     user_df = form_df(min_working_time, max_working_time, ethane, propane, temperature, vapor)
     pred_df = starting(min_working_time, max_working_time, ethane, propane, temperature, vapor)
     pred_df.columns = ['C2H4', 'C3H6']
     df_res = pd.concat([user_df, pred_df], axis=1)
-    # data_csv = df_res.to_csv(os.path.join(os.path.dirname(__file__), "user_data.csv"))
-    return df_res.to_csv(os.path.join(os.path.dirname(__file__), "user_data.csv"), index=False)
+    if format_file == "csv":
+        df_res.to_csv(os.path.join(os.path.dirname(__file__), f"{file_name}.csv"), index=False)
+        f_csv = f'{file_name}.csv'
+        return f_csv
+    else:
+        df_res.to_excel(os.path.join(os.path.dirname(__file__), f"{file_name}.xlsx"), index=False)
+        f_xlsx = f'{file_name}.xlsx'
+        return f_xlsx
 
 
 def make_plot(min_working_time, max_working_time, ethane, propane, temperature, vapor):
@@ -85,7 +88,10 @@ with gr.Blocks() as first_app:
             with gr.Row():
                 start_btn = gr.Button(value="Запустить печь пиролиза")
                 plot_btn = gr.Button(value="График выхода")
-                file_btn = gr.Button(value="Сохранить данные")
+            with gr.Row():
+                format_file = gr.Dropdown(["csv", "xls"], label="Выберите формат файла")
+                file_name = gr.Text(label="Введите название файла")
+            file_btn = gr.Button(value="Сохранить данные")
         with gr.Column():
             pred_data = gr.Textbox(label="Выход: C2H4  |  C3H6")
             eth_plot = gr.Plot(label="График выхода C2H4")
@@ -98,7 +104,8 @@ with gr.Blocks() as first_app:
                     outputs=pred_data)
     plot_btn.click(make_plot, inputs=[min_working_time, max_working_time, ethane, propane, temperature, vapor],
                    outputs=[eth_plot, prop_plot])
-    file_btn.click(res_df, inputs=[min_working_time, max_working_time, ethane, propane, temperature, vapor],
+    file_btn.click(res_df, inputs=[min_working_time, max_working_time, ethane, propane, temperature, vapor, file_name,
+                                   format_file],
                    outputs=show_df)
 
 first_app.launch()
