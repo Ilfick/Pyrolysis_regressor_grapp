@@ -4,6 +4,7 @@ import pandas as pd
 from keras.models import load_model
 import matplotlib
 import os
+from interface import OwnTheme
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -73,7 +74,16 @@ def make_plot(min_working_time, max_working_time, ethane, propane, temperature, 
     return fig_eth, fig_prop
 
 
-with gr.Blocks() as first_app:
+own_theme = OwnTheme()
+
+with gr.Blocks(theme=own_theme) as first_app:
+    gr.Text(label="Модель процесса пиролиза нефтяного сырья на основе нейронной сети",
+            value=" Введите желаемое начальное время работы печи и конечное время с шагом в восемь часов.\n"
+                  " Введите остальные параметры процесса: Доли этана и пропана (с шагом 0.5), температуру, долю пара и "
+                  "запустите печь.\n"
+                  " Вывод графиков выхода целевых продуктов возможен при помощи кнопки 'График выхода'\n"
+                  " Сохранение результатов на ваше устройство возможно после выбора формата файла и ввода названия для "
+                  "него по кнопке 'Сохранить данные в файл'")
     with gr.Row():
         with gr.Column():
             with gr.Row():
@@ -91,12 +101,12 @@ with gr.Blocks() as first_app:
             with gr.Row():
                 format_file = gr.Dropdown(["csv", "xls"], label="Выберите формат файла")
                 file_name = gr.Text(label="Введите название файла")
-            file_btn = gr.Button(value="Сохранить данные")
+            file_btn = gr.Button(value="Сохранить данные в файл")
         with gr.Column():
             pred_data = gr.Textbox(label="Выход: C2H4  |  C3H6")
             eth_plot = gr.Plot(label="График выхода C2H4")
             prop_plot = gr.Plot(label="График выхода C3H6")
-            show_df = [gr.File(label="Output File",
+            show_df = [gr.File(label="Файл с результатами работы печи пиролиза",
                                file_count="single",
                                file_types=["", ".", ".csv", ".xls", ".xlsx"])]
 
