@@ -1,7 +1,7 @@
 import gradio as gr
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
-from keras.models import load_model
+import pickle
 import matplotlib
 import os
 from interface import OwnTheme
@@ -18,8 +18,9 @@ def train_data():
 
 
 class PyrolysisPredictor():
-    mdpath = 'fm_pyrolisys'
-    fm_pyrolisys = load_model(mdpath)
+    # Load from file
+    with open("pickle_model.pkl", 'rb') as file:
+        pickle_model = pickle.load(file)
 
 
 def starting(min_working_time, max_working_time, ethane, propane, temperature, vapor):
@@ -28,7 +29,7 @@ def starting(min_working_time, max_working_time, ethane, propane, temperature, v
     sc = StandardScaler()
     sc.fit(train_data())
     ux_scaled = sc.transform(user_x)
-    pred = PyrolysisPredictor.fm_pyrolisys.predict(ux_scaled)
+    pred = PyrolysisPredictor.pickle_model.predict(ux_scaled)
     results = pd.DataFrame(pred)
     return results
 
