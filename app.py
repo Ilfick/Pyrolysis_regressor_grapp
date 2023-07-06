@@ -3,9 +3,9 @@ from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import pickle
 import matplotlib
+import openpyxl
 import os
 from interface import OwnTheme
-
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -18,12 +18,14 @@ def train_data():
 
 
 class PyrolysisPredictor():
+    """класс в который загружается натренированная модель НС/МО"""
     # Load from file
     with open("pickle_model.pkl", 'rb') as file:
         pickle_model = pickle.load(file)
 
 
 def starting(min_working_time, max_working_time, ethane, propane, temperature, vapor):
+    """функция возращающая прогноз модели процесса пиролиза на основе пользовательских данных"""
     user_df = form_df(min_working_time, max_working_time, ethane, propane, temperature, vapor)
     user_x = user_df[['working_time', 'ethane', 'propane', 'temperature', 'vapor']].values
     sc = StandardScaler()
@@ -35,6 +37,7 @@ def starting(min_working_time, max_working_time, ethane, propane, temperature, v
 
 
 def form_df(min_working_time, max_working_time, ethane, propane, temperature, vapor):
+    """функция для формирования dataframe из введённых пользователем данных"""
     df = pd.DataFrame(columns=['working_time', 'ethane', 'propane', 'temperature', 'vapor'])
     min_working_time, max_working_time = int(min_working_time), int(max_working_time)
     for i in range(min_working_time, max_working_time + 1, 8):
@@ -44,6 +47,8 @@ def form_df(min_working_time, max_working_time, ethane, propane, temperature, va
 
 
 def res_df(min_working_time, max_working_time, ethane, propane, temperature, vapor, file_name, format_file):
+    """функция формирующая dataframe из введённых пользователем данных и данных спрогнозированных моделью и выводящая
+    его в виле файла в формате выбранном пользователем"""
     user_df = form_df(min_working_time, max_working_time, ethane, propane, temperature, vapor)
     pred_df = starting(min_working_time, max_working_time, ethane, propane, temperature, vapor)
     pred_df.columns = ['C2H4', 'C3H6']
@@ -59,6 +64,8 @@ def res_df(min_working_time, max_working_time, ethane, propane, temperature, vap
 
 
 def make_plot(min_working_time, max_working_time, ethane, propane, temperature, vapor):
+    """функция для вывода графиков спрогнозированного выхода целевых продуктов процесса пиролиза, графики выводятся
+    отдельно: как для выхода этилена, так и для выхода пропилена"""
     result = starting(min_working_time, max_working_time, ethane, propane, temperature, vapor)
     fig_eth = plt.figure()
     plt.plot(result[0], label='C2H4')
@@ -78,11 +85,12 @@ def make_plot(min_working_time, max_working_time, ethane, propane, temperature, 
 own_theme = OwnTheme()
 
 with gr.Blocks(theme=own_theme) as first_app:
-    gr.Text(label="Модель процесса пиролиза нефтяного сырья на основе нейронной сети",
+    gr.Text(label="Модель процесса пиролиза нефтяного сырья на основе модели машинного обучения",
             value=" Введите желаемое начальное время работы печи и конечное время с шагом в восемь часов.\n"
-                  " Введите остальные параметры процесса: Доли этана и пропана (с шагом 0.5), температуру, долю пара и "
-                  "запустите печь.\n"
-                  " Вывод графиков выхода целевых продуктов возможен при помощи кнопки 'График выхода'\n"
+                  " Введите остальные параметры процесса: Доли этана и пропана (с шагом 0.5), температуру (шаг 1 градус "
+                  "по Цельсию), долю пара и запустите печь.\n"
+                  " Вывод графиков выхода целевых продуктов может быть осуществлён после запуска печи по нажатию кнопки "
+                  "'График выхода'\n"
                   " Сохранение результатов на ваше устройство возможно после выбора формата файла и ввода названия для "
                   "него по кнопке 'Сохранить данные в файл'")
     with gr.Row():
